@@ -70,13 +70,11 @@
             z-index: 10;
         }
         
-        /* --- CORRECCIÓN DE HEADER SUPERPUESTO --- */
         .pantalla header {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            /* z-index: 20; */ /* <-- SE ELIMINA ESTA LÍNEA PARA EVITAR LA SUPERPOSICIÓN */
             padding: 15px 20px;
             background: rgba(248, 248, 248, 0.8);
             backdrop-filter: blur(10px);
@@ -445,12 +443,14 @@
             flex-direction: column;
             height: 100%;
         }
+        
+        /* --- CORRECCIÓN DE ESPACIADO DEL STEPPER --- */
         .config-screen-layout header {
-            position: relative; /* Cambiado de absolute */
-            height: 160px; 
+            position: relative;
+            height: 120px; /* <-- CAMBIO: Altura reducida */
             display: flex;
             flex-direction: column;
-            justify-content: flex-end;
+            justify-content: center; /* <-- CAMBIO: Centrado verticalmente */
             padding-bottom: 0;
             flex-shrink: 0;
             background: rgba(248, 248, 248, 0.8);
@@ -929,7 +929,6 @@
 
         <div id="pantalla-onboarding" class="pantalla">
             <header>
-                <button class="nav-button back-button" data-target="pantalla-home">&lt; Volver</button>
             </header>
             
             <div class="onboarding-slider-wrapper">
