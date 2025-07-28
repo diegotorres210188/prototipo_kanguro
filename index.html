@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prototipo muv Kanguro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-orange: #F3722C;
+            --background-grey: #F8F8F8;
+            --text-dark: #1C1C1E;
+            --text-light: #8A8A8E;
+            --panel-background: #FFFFFF;
+            --ios-blue: #007AFF;
+            --ios-green: #34C759;
+            --border-color: #EAEAEA;
+        }
+
+        /* --- Estructura General --- */
+        body {
+            background-color: var(--background-grey);
+            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            max-width: 430px;
+            margin: 0 auto;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .screen {
+            background-color: var(--background-grey);
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Manejo de Pantallas y Transiciones --- */
+        .pantalla {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--background-grey);
+            transition: opacity 0.35s ease-in-out, transform 0.35s ease-in-out;
+            opacity: 0;
+            transform: scale(1.05);
+            pointer-events: none;
+        }
+
+        .pantalla.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+            z-index: 10;
+        }
+        
+        .pantalla header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            padding: 15px 20px;
+            background: rgba(248, 248, 248, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        
+        .pantalla .back-button {
+            font-size: 17px;
+            font-weight: 500;
+            color: var(--ios-blue);
+            background: none;
+            border: none;
+            cursor: pointer;
+            position: absolute;
+            top: 15px;
+        }
+
+        /* --- Pantalla Principal (Home) --- */
+        #pantalla-home header { background: none; backdrop-filter: none; }
+
+        .map-overlay-icons {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .map-overlay-icons > div, .map-overlay-icons > button {
+            position: absolute;
+            pointer-events: auto;
+        }
+        .user-initial {
+            top: 20px;
+            left: 20px;
+            width: 44px;
+            height: 44px;
+            background-color: #D8BFD8;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            color: var(--text-dark);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .location-alert {
+            top: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            background-color: var(--panel-background);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            color: var(--text-dark);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .location-alert svg {
+            color: var(--primary-orange);
+        }
+        .center-dot {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -150%);
+            width: 20px;
+            height: 20px;
+            background-color: var(--primary-orange);
+            border-radius: 50%;
+            border: 4px solid var(--panel-background);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .recenter-btn {
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* --- Panel Inferior --- */
+        .bottom-sheet {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--panel-background);
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            padding: 20px;
+            padding-bottom: 30px;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sheet-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 0;
+        }
+        .sheet-header p {
+            font-size: 16px;
+            color: var(--text-light);
+            margin: 4px 0 0 0;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background-color: var(--background-grey);
+            padding: 12px 15px;
+            border-radius: 12px;
+            gap: 10px;
+        }
+        .search-bar input {
+            flex-grow: 1;
+            border: none;
+            background: none;
+            outline: none;
+            font-size: 16px;
+            color: var(--text-dark);
+        }
+        .search-bar input::placeholder {
+            color: var(--text-light);
+        }
+        .search-bar .icon {
+            color: var(--text-light);
+        }
+
+        /* --- Banner Promocional --- */
+        .promo-banner {
+            background: linear-gradient(135deg, #4A90E2, #007AFF);
+            border-radius: 16px;
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .promo-banner:hover {
+            transform: scale(1.03);
+        }
+        .promo-icon {
+            background-color: rgba(255,255,255,0.2);
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+        .promo-icon img {
+            width: 100%;
+            height: 100%;
+        }
+        .promo-text h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .promo-text p {
+            margin: 4px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+        .promo-arrow {
+            margin-left: auto;
+        }
+        
+        /* --- Lista de Opciones --- */
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .option-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--background-grey);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-orange);
+        }
+        .option-item span {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+        
+        /* --- Pestañas Inferiores --- */
+        .bottom-tabs {
+            display: flex;
+            gap: 15px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+        .tab-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            border-radius: 12px;
+            background-color: var(--background-grey);
+        }
+        .tab-item.active {
+            background-color: #e0e0e0;
+        }
+        .tab-item span {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* --- Home Indicator del iPhone --- */
+        .home-indicator {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px;
+            height: 5px;
+            background-color: #4d4d4d;
+            border-radius: 10px;
+        }
+
+        /* --- PANTALLA ONBOARDING --- */
+        #pantalla-onboarding {
+            background-color: var(--panel-background);
+            justify-content: space-between;
+        }
+
+        #pantalla-onboarding header { background: var(--panel-background); }
+        
+        .onboarding-slider-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            transition: transform 0.4s ease-in-out;
+        }
+
+        .onboarding-slide {
+            width: 100%;
+            height: 100%;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            padding-bottom: 180px; /* Espacio para el footer */
+            box-sizing: border-box;
+        }
+        
+        .onboarding-slide img {
+            width: 100%;
+            max-width: 550px;
+            height: 550px;
+            margin-bottom: 40px;
+        }
+        
+        .onboarding-slide h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 0 0 10px 0;
+        }
+
+        .onboarding-slide p {
+            font-size: 17px;
+            color: var(--text-light);
+            line-height: 1.5;
+            max-width: 320px;
+            margin: 0;
+        }
+
+        #pantalla-onboarding footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 25px 40px 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        .skip-link {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .pagination-dots {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #D1D1D6;
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            background-color: var(--ios-blue);
+            transform: scale(1.2);
+        }
+        
+        .cta-button {
+            width: 100%;
+            background-color: var(--ios-blue);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .cta-button:hover {
+            background-color: #0056b3;
+        }
+        .cta-button.secondary {
+            background-color: var(--background-grey);
+            color: var(--ios-blue);
+            font-weight: 500;
+        }
+
+        /* --- PANTALLAS DE CONFIGURACIÓN DE VIAJE --- */
+        .config-screen-layout {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .config-screen-layout header {
+            /* Aumentamos la altura para dar espacio al nuevo stepper */
+            height: 160px; 
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding-bottom: 0;
+        }
+        
+        /* Rediseño del Stepper */
+        .stepper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px 0;
+            position: relative;
+        }
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Aumentamos el tamaño de la fuente y el ancho del contenedor del paso */
+            font-size: 13px; 
+            color: var(--text-light);
+            z-index: 1;
+            width: 85px; 
+            text-align: center;
+        }
+        .step-icon {
+            /* Aumentamos el tamaño del círculo del ícono */
+            width: 44px; 
+            height: 44px; 
+            border-radius: 50%;
+            background-color: #EFEFF4;
+            border: 2px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Aumentamos el margen inferior */
+            margin-bottom: 10px; 
+            transition: all 0.3s ease;
+            color: var(--text-light);
+        }
+        .step-icon svg { 
+            /* Aumentamos el tamaño del SVG dentro del círculo */
+            width: 22px; 
+            height: 22px; 
+        }
+        .step.active .step-icon {
+            background-color: var(--ios-blue);
+            border-color: var(--ios-blue);
+            color: white;
+        }
+        .step.completed .step-icon {
+            background-color: var(--ios-green);
+            border-color: var(--ios-green);
+            color: white;
+        }
+        .step.active span {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        .stepper-line {
+            position: absolute;
+            height: 2px;
+            background-color: var(--border-color);
+            width: calc(100% - 100px);
+            /* Ajustamos la posición vertical de la línea para centrarla con los nuevos íconos */
+            top: 42px; 
+            left: 50px;
+            z-index: 0;
+        }
+        .stepper-progress {
+            position: absolute;
+            height: 2px;
+            background-color: var(--ios-green);
+            width: 0;
+            /* Ajustamos la posición vertical de la línea para centrarla con los nuevos íconos */
+            top: 42px; 
+            left: 50px;
+            z-index: 0;
+            transition: width 0.4s ease;
+        }
+
+        .config-screen-layout main {
+            flex-grow: 1;
+            /* Ajustamos el padding para que el contenido no quede debajo del header más alto */
+            padding-top: 160px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .map-container {
+            height: 40%;
+            position: relative;
+        }
+
+        .config-panel {
+            flex-grow: 1;
+            background-color: var(--panel-background);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            overflow-y: auto;
+        }
+        
+        .config-panel h2 {
+            font-size: 20px;
+            margin: 0;
+            text-align: center;
+        }
+        
+        .config-block {
+            background-color: var(--background-grey);
+            border-radius: 12px;
+            padding: 0 15px;
+        }
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+        .config-item:not(:last-child) {
+            border-bottom: 1px solid #DCDCE1;
+        }
+        .config-item label { font-weight: 500; font-size: 16px; }
+        
+        .select-container {
+            position: relative;
+        }
+        .select-container select {
+            padding: 8px 30px 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: white;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+        .select-container .chevron-icon {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #C7C7CC;
+        }
+        
+        .switch { position: relative; display: inline-block; width: 51px; height: 31px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 27px; width: 27px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--ios-green); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .school-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .school-list li {
+            background-color: var(--background-grey);
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .school-list li.selected {
+            border-color: var(--ios-blue);
+            background-color: #eaf5ff;
+        }
+        
+        .config-screen-layout footer {
+            background-color: var(--panel-background);
+            padding: 20px 25px 40px 25px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* --- PANTALLA DE HORARIO Y PRECIO --- */
+        #pantalla-horario main {
+            padding: 160px 25px 20px 25px; /* Ajustado por header */
+            gap: 25px;
+            justify-content: center;
+        }
+        #pantalla-horario footer {
+            text-align: center;
+            position: relative;
+        }
+        .promo-ribbon {
+            background-color: var(--ios-green);
+            color: white;
+            padding: 10px;
+            font-weight: 600;
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .footer-price-summary {
+            margin-bottom: 15px;
+        }
+        .footer-price-summary .price {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .pickup-time-info {
+            text-align: center;
+            padding: 15px;
+            background-color: #eaf5ff;
+            color: #0056b3;
+            border-radius: 12px;
+            font-weight: 500;
+            display: none;
+        }
+        
+        .schedule-config {
+            background-color: var(--panel-background);
+            padding: 20px;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .time-input-group, .day-selector-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .schedule-config label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .time-input {
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            font-size: 16px;
+            background-color: var(--background-grey);
+        }
+        .day-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+        .day-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 2px solid var(--border-color);
+            background-color: var(--background-grey);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+        }
+        .day-btn span:first-child { font-size: 10px; color: var(--text-light); }
+        .day-btn.active {
+            background-color: var(--ios-blue);
+            color: white;
+            border-color: var(--ios-blue);
+        }
+        .day-btn.active span:first-child { color: rgba(255,255,255,0.8); }
+        
+        /* --- PANTALLA SELECCIÓN DE CONDUCTOR --- */
+        #pantalla-conductor main {
+            padding: 160px 0 110px 0; /* Ajustado por header */
+            overflow: hidden;
+            position: relative;
+        }
+        .driver-slider-container {
+            display: flex;
+            height: 100%;
+            transition: transform 0.4s ease-in-out;
+        }
+        .driver-card {
+            width: 100%;
+            padding: 0 40px;
+            box-sizing: border-box;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .driver-card-inner {
+            background-color: var(--panel-background);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .driver-card img {
+            width: 150px;
+            height: 150px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+        }
+        .driver-info h3 { margin: 0; font-size: 20px; }
+        .driver-info p { margin: 5px 0 0 0; color: var(--text-light); font-size: 14px; line-height: 1.4; }
+        .driver-rating { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 14px; }
+        .driver-checks { font-size: 14px; color: var(--ios-green); font-weight: 600; }
+        .driver-quote { font-style: italic; color: var(--text-light); border-left: 3px solid var(--background-grey); padding-left: 10px; margin-top: 10px; font-size: 14px; }
+        .slider-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: none;
+            cursor: pointer;
+            z-index: 30;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        #prev-driver { left: 10px; }
+        #next-driver { right: 10px; }
+        
+        /* --- PANTALLA RESUMEN --- */
+        #pantalla-resumen main {
+            padding: 160px 20px 110px 20px; /* Ajustado por header */
+            overflow-y: auto;
+        }
+        .summary-section {
+            background-color: var(--panel-background);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+        }
+        .summary-section h3 { margin-top: 0; font-size: 18px; }
+        .summary-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color); font-size: 14px; }
+        .summary-item:last-child { border-bottom: none; }
+        .summary-item .label { color: var(--text-light); }
+        .summary-item .value { font-weight: 600; }
+        
+        /* --- PANTALLA CONFIRMACIÓN FINAL --- */
+        #pantalla-confirmacion { background-color: var(--panel-background); }
+        #pantalla-confirmacion header { background: none; backdrop-filter: none; }
+        #pantalla-confirmacion main {
+            padding: 20px;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .confirmation-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding-top: 50px;
+        }
+        #pantalla-confirmacion .icon-final {
+            width: 80px;
+            height: 80px;
+            background-color: var(--ios-green);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        #pantalla-confirmacion h1 { font-size: 24px; }
+        #pantalla-confirmacion p { font-size: 16px; color: var(--text-light); max-width: 320px; }
+        .final-actions { 
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            padding: 20px 25px 40px 25px;
+            box-sizing: border-box;
+            background-color: var(--panel-background);
+            border-top: 1px solid var(--border-color);
+        }
+        .info-box {
+            background-color: var(--background-grey);
+            padding: 15px;
+            border-radius: 12px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .info-box .label { font-size: 14px; color: var(--text-light); }
+        .info-box .value { font-size: 18px; font-weight: 600; margin-top: 5px; }
+        .add-contact-link {
+            color: var(--ios-blue);
+            text-decoration: none;
+            font-weight: 500;
+            margin-top: 10px;
+            display: block;
+            font-size: 14px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="screen">
+        <div id="pantalla-home" class="pantalla active">
+            <header></header>
+            <div class="map-overlay-icons">
+                <div class="user-initial">DT</div>
+                <div class="location-alert">LA <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 16C12.4183 16 16 12.4183 16 8C16 3.58172 12.4183 0 8 0C3.58172 0 0 3.58172 0 8C0 12.4183 3.58172 16 8 16Z" fill="#F3722C" fill-opacity="0.2"/><path d="M8.75 3.75V9.25H7.25V3.75H8.75ZM8 12.25C8.41421 12.25 8.75 11.9142 8.75 11.5C8.75 11.0858 8.41421 10.75 8 10.75C7.58579 10.75 7.25 11.0858 7.25 11.5C7.25 11.9142 7.58579 12.25 8 12.25Z" fill="#F3722C"/></svg></div>
+                <div class="center-dot"></div>
+                <button class="recenter-btn">
+                    <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="22" cy="22" r="22" fill="white"/><path d="M31 21L21.5 11.5L21.5 17.5C18.5 17.5 16 18.5 14 20.5C15 23.5 17.5 26.5 21.5 26.5V21.5L31 21Z" fill="#3C3C43" fill-opacity="0.6"/></svg>
+                </button>
+            </div>
+
+            <div class="bottom-sheet">
+                <div class="sheet-header">
+                    <h2>¡Hola, Diego!</h2>
+                    <p>Realizá tu viaje</p>
+                </div>
+                <div class="search-bar">
+                    <span class="icon">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.5 17.5L13.875 13.875M15.8333 9.16667C15.8333 12.8486 12.8486 15.8333 9.16667 15.8333C5.48477 15.8333 2.5 12.8486 2.5 9.16667C2.5 5.48477 5.48477 2.5 9.16667 2.5C12.8486 2.5 15.8333 5.48477 15.8333 9.16667Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    <input type="text" placeholder="Introduce tu ruta">
+                    <span class="icon">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 15C12.7614 15 15 12.7614 15 10V5C15 2.23858 12.7614 0 10 0C7.23858 0 5 2.23858 5 5V10C5 12.7614 7.23858 15 10 15ZM17.5 10H19C19 14.5817 15.4183 18.25 11 18.8562V20H9V18.8562C4.58172 18.25 1 14.5817 1 10H2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                </div>
+
+                <div class="options-list">
+                    <div class="option-item">
+                        <div class="option-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 12.5C11.3807 12.5 12.5 11.3807 12.5 10C12.5 8.61929 11.3807 7.5 10 7.5C8.61929 7.5 7.5 8.61929 7.5 10C7.5 11.3807 8.61929 12.5 10 12.5Z" stroke="currentColor" stroke-width="1.5"/><path d="M10 18.3333C15 14.1667 17.5 12.0425 17.5 9.16667C17.5 5.02462 14.1421 1.66667 10 1.66667C5.85786 1.66667 2.5 5.02462 2.5 9.16667C2.5 12.0425 5 14.1667 10 18.3333Z" stroke="currentColor" stroke-width="1.5"/></svg></div>
+                        <span>Ubicar en mapa</span>
+                    </div>
+                    <div class="option-item">
+                        <div class="option-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 10.4L10 3.33333L17.5 10.4V16.6667C17.5 17.1269 17.1269 17.5 16.6667 17.5H12.5V12.5H7.5V17.5H3.33333C2.8731 17.5 2.5 17.1269 2.5 16.6667V10.4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span>Agregar Casa</span>
+                    </div>
+                    <div class="option-item">
+                        <div class="option-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.83333 17.5V5.83333C5.83333 5.3731 6.20643 5 6.66667 5H13.3333C13.7936 5 14.1667 5.3731 14.1667 5.83333V17.5M3.33333 17.5H16.6667M8.33333 8.33333H11.6667M8.33333 11.6667H11.6667M8.33333 15H8.34167M10.8333 15H10.8417M2.5 17.5V4.16667C2.5 3.24619 3.24619 2.5 4.16667 2.5H15.8333C16.7538 2.5 17.5 3.24619 17.5 4.16667V17.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span>Agregar Trabajo</span>
+                    </div>
+                    <div id="promo-colegio" class="promo-banner nav-button" data-target="pantalla-onboarding">
+                        <div class="promo-icon">
+                           <img data-img-key="logoBanner" src="" alt="Logo Muv Kanguro">
+                        </div>
+                        <div class="promo-text">
+                            <h3>muv kanguro te lleva al cole</h3>
+                            <p>Viajes seguros y programados para tus hijos. ¡Descubrilo!</p>
+                        </div>
+                        <div class="promo-arrow">
+                            <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 13L7 7L1 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="bottom-tabs">
+                    <div class="tab-item active">
+                        <svg width="40" height="24" viewBox="0 0 40 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M32.4082 17.0205L35.8163 12L32.4082 6.97952C32.0694 6.4286 31.3469 6 30.6122 6H13.8776C13.1429 6 12.4204 6.4286 12.0816 6.97952L8.67347 12L12.0816 17.0205C12.4204 17.5714 13.1429 18 13.8776 18H30.6122C31.3469 18 32.0694 17.5714 32.4082 17.0205Z" fill="#D1D1D6"/><path d="M12.0816 6.97952C12.4204 6.4286 13.1429 6 13.8776 6H30.6122C31.3469 6 32.0694 6.4286 32.4082 6.97952L35.8163 12L32.4082 17.0205C32.0694 17.5714 31.3469 18 30.6122 18H13.8776C13.1429 18 12.4204 17.5714 12.0816 17.0205L8.67347 12L12.0816 6.97952Z" stroke="#3C3C43" stroke-opacity="0.6" stroke-width="2"/><circle cx="16" cy="15" r="3" fill="white" stroke="#3C3C43" stroke-opacity="0.6" stroke-width="2"/><circle cx="28" cy="15" r="3" fill="white" stroke="#3C3C43" stroke-opacity="0.6" stroke-width="2"/></svg>
+                        <span>Viajar</span>
+                    </div>
+                    <div class="tab-item">
+                        <svg width="40" height="24" viewBox="0 0 40 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="8" width="32" height="16" rx="3" fill="#D1D1D6" stroke="#3C3C43" stroke-opacity="0.6" stroke-width="2"/><path d="M4 11C4 9.34315 5.34315 8 7 8H33C34.6569 8 36 9.34315 36 11V12H4V11Z" fill="#E5E5EA" stroke="#3C3C43" stroke-opacity="0.6" stroke-width="2"/><path d="M16 4L12 8H28L24 4H16Z" fill="#D1D1D6" stroke="#3C3C43" stroke-opacity="0.6" stroke-width="2"/></svg>
+                        <span>Enviar</span>
+                    </div>
+                </div>
+            </div>
+            <div class="home-indicator"></div>
+        </div>
+
+        <div id="pantalla-onboarding" class="pantalla">
+            <header>
+                <button class="nav-button back-button" data-target="pantalla-home">&lt; Volver</button>
+            </header>
+            
+            <div class="onboarding-slider-wrapper">
+                <div class="onboarding-slide">
+                    <img data-img-key="onboarding1" src="" alt="Icono de escudo de seguridad">
+                    <h2>Seguridad en cada tramo</h2>
+                    <p>Viajes monitoreados en tiempo real por nuestro equipo y opción de grabación para tu total tranquilidad.</p>
+                </div>
+                <div class="onboarding-slide">
+                    <img data-img-key="onboarding2" src="" alt="Icono de estrella de calificación">
+                    <h2>Conductores de confianza</h2>
+                    <p>Elegí entre los mejores. Solo conductores con +1000 viajes, puntaje excelente y sin incidentes.</p>
+                </div>
+                <div class="onboarding-slide">
+                    <img data-img-key="onboarding3" src="" alt="Icono de mapa y ruta">
+                    <h2>Control total de la ruta</h2>
+                    <p>Seguí el trayecto desde tu app, compartí la ruta con otros familiares y recibí alertas de llegada.</p>
+                </div>
+                <div class="onboarding-slide">
+                    <img data-img-key="onboarding4" src="" alt="Icono de calendario">
+                    <h2>Programación y puntualidad</h2>
+                    <p>Organizá los viajes del mes con días y horarios fijos. ¡La puntualidad es nuestra prioridad!</p>
+                </div>
+                <div class="onboarding-slide">
+                    <img data-img-key="onboarding5" src="" alt="Icono de fiesta y celebración">
+                    <h2>Costo semanal y ¡viaje gratis!</h2>
+                    <p>Pagá por semana y olvidate. Además, te regalamos el primer viaje para que pruebes el servicio sin compromiso.</p>
+                </div>
+            </div>
+            
+            <footer>
+                <div class="pagination-dots">
+                    </div>
+                <button id="onboarding-cta-btn" class="cta-button">Siguiente</button>
+                <a href="#" class="skip-link">Omitir</a>
+            </footer>
+        </div>
+        
+        <div id="pantalla-casa" class="pantalla config-screen-layout" data-step="1">
+            <header>
+                <button class="nav-button back-button" data-target="pantalla-onboarding">&lt; Volver</button>
+                <div class="stepper"></div>
+            </header>
+            <main>
+                <div class="map-container">
+                     <div class="center-dot"></div>
+                </div>
+                <div class="config-panel">
+                    <h2>Seleccioná la ubicación de tu casa</h2>
+                    <div class="search-bar">
+                         <span class="icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.5 17.5L13.875 13.875M15.8333 9.16667C15.8333 12.8486 12.8486 15.8333 9.16667 15.8333C5.48477 15.8333 2.5 12.8486 2.5 9.16667C2.5 5.48477 5.48477 2.5 9.16667 2.5C12.8486 2.5 15.8333 5.48477 15.8333 9.16667Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                        <input type="text" id="direccion-casa-input" placeholder="Introduce tu dirección">
+                    </div>
+                    <div class="config-block">
+                        <div class="config-item">
+                            <label for="cantidad-nenes">¿Cuántos nenes viajan?</label>
+                            <div class="select-container">
+                                <select id="cantidad-nenes">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                </select>
+                                <svg class="chevron-icon" width="12" height="7" viewBox="0 0 12 7" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L6 6L11 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </div>
+                        </div>
+                        <div class="config-item">
+                            <label>¿Iré de acompañante?</label>
+                            <label class="switch">
+                                <input type="checkbox" id="acomp-toggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <footer>
+                <button class="cta-button nav-button" data-target="pantalla-colegio">Continuar</button>
+            </footer>
+        </div>
+        
+        <div id="pantalla-colegio" class="pantalla config-screen-layout" data-step="2">
+            <header>
+                <button class="nav-button back-button" data-target="pantalla-casa">&lt; Volver</button>
+                <div class="stepper"></div>
+            </header>
+            <main>
+                <div class="map-container">
+                     <div class="center-dot"></div>
+                </div>
+                <div class="config-panel">
+                    <h2>¿A qué colegio van?</h2>
+                    <div class="search-bar">
+                         <span class="icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.5 17.5L13.875 13.875M15.8333 9.16667C15.8333 12.8486 12.8486 15.8333 9.16667 15.8333C5.48477 15.8333 2.5 12.8486 2.5 9.16667C2.5 5.48477 5.48477 2.5 9.16667 2.5C12.8486 2.5 15.8333 5.48477 15.8333 9.16667Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                        <input type="text" placeholder="Buscá por nombre o dirección">
+                    </div>
+                    <p style="font-weight: 600; margin-bottom: 5px;">Colegios cercanos:</p>
+                    <ul class="school-list">
+                        <li data-school-name="Instituto Ballester">Instituto Ballester</li>
+                        <li data-school-name="Colegio Holters">Colegio Holters</li>
+                        <li data-school-name="Colegio Alemán">Colegio Alemán</li>
+                    </ul>
+                </div>
+            </main>
+            <footer>
+                <button class="cta-button nav-button" data-target="pantalla-horario">Continuar</button>
+            </footer>
+        </div>
+        
+        <div id="pantalla-horario" class="pantalla config-screen-layout" data-step="3">
+             <header>
+                <button class="nav-button back-button" data-target="pantalla-colegio">&lt; Volver</button>
+                <div class="stepper"></div>
+            </header>
+            <main>
+                <div class="schedule-config">
+                    <div class="time-input-group">
+                        <label for="school-time">Horario de entrada al colegio</label>
+                        <input class="time-input" type="time" id="school-time" step="900">
+                    </div>
+                    <div class="pickup-time-info" id="pickup-time-info"></div>
+                    <div class="day-selector-group">
+                        <label>Días de la semana</label>
+                        <div class="day-buttons">
+                            <button class="day-btn active" data-day="L"><span>LUN</span>L</button>
+                            <button class="day-btn active" data-day="M"><span>MAR</span>M</button>
+                            <button class="day-btn active" data-day="X"><span>MIE</span>X</button>
+                            <button class="day-btn active" data-day="J"><span>JUE</span>J</button>
+                            <button class="day-btn active" data-day="V"><span>VIE</span>V</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <footer>
+                <div class="promo-ribbon">1er viaje ¡Gratis!</div>
+                <div class="footer-price-summary">
+                    <span class="price" id="total-price">Precio por semana: $12.500</span>
+                </div>
+                <button class="cta-button nav-button" data-target="pantalla-conductor">Continuar</button>
+            </footer>
+        </div>
+        
+        <div id="pantalla-conductor" class="pantalla config-screen-layout" data-step="4">
+            <header>
+                <button class="nav-button back-button" data-target="pantalla-horario">&lt; Volver</button>
+                <div class="stepper"></div>
+            </header>
+            <main>
+                <div class="driver-slider-container">
+                    </div>
+                <button id="prev-driver" class="slider-nav"><svg width="12" height="20" viewBox="0 0 12 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 18L2 10L10 2" stroke="#3C3C43" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                <button id="next-driver" class="slider-nav"><svg width="12" height="20" viewBox="0 0 12 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 2L10 10L2 18" stroke="#3C3C43" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            </main>
+            <footer>
+                <button class="cta-button nav-button" data-target="pantalla-resumen">Continuar</button>
+            </footer>
+        </div>
+
+        <div id="pantalla-resumen" class="pantalla config-screen-layout" data-step="5">
+            <header>
+                <button class="nav-button back-button" data-target="pantalla-conductor">&lt; Volver</button>
+                <div class="stepper"></div>
+            </header>
+            <main>
+                <div class="summary-section">
+                    <h3>Resumen del Viaje muv Kanguro</h3>
+                    <div class="summary-item">
+                        <span class="label">Desde</span>
+                        <span class="value" id="summary-casa">No seleccionada</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Hasta</span>
+                        <span class="value" id="summary-colegio">No seleccionado</span>
+                    </div>
+                     <div class="summary-item">
+                        <span class="label">Pasajeros</span>
+                        <span class="value" id="summary-pasajeros">1 niño</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Días</span>
+                        <span class="value" id="summary-dias">Lunes a Viernes</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Horario</span>
+                        <span class="value" id="summary-horario">08:00</span>
+                    </div>
+                </div>
+                 <div class="summary-section">
+                    <h3>Conductor/a</h3>
+                    <div class="summary-item">
+                        <span class="label">Nombre</span>
+                        <span class="value" id="summary-conductor-nombre">Ana Rodríguez</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Vehículo</span>
+                        <span class="value" id="summary-conductor-vehiculo">Toyota Corolla</span>
+                    </div>
+                </div>
+                <div class="summary-section">
+                    <h3>Total Semanal</h3>
+                    <div class="summary-item">
+                        <span class="label">Primer viaje</span>
+                        <span class="value" style="color: var(--ios-green);">¡Gratis!</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Total a pagar</span>
+                        <span class="value" id="summary-total-price" style="font-size: 22px;">$12.500</span>
+                    </div>
+                </div>
+            </main>
+            <footer>
+                <button class="cta-button nav-button" data-target="pantalla-confirmacion">Programar Viaje</button>
+            </footer>
+        </div>
+
+        <div id="pantalla-confirmacion" class="pantalla">
+            <header></header>
+            <main>
+                <div class="confirmation-content">
+                    <div class="icon-final">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <h1>¡Todo listo!</h1>
+                    <p>Tu viaje con muv kanguro ha sido programado con éxito.</p>
+                    <div class="info-box">
+                        <div class="label">Los chicos deben estar listos a las:</div>
+                        <div class="value" id="final-pickup-time">07:30 AM</div>
+                    </div>
+                    <div class="info-box">
+                        <div class="label">Contacto por cambios o consultas</div>
+                        <div class="value">+54 9 11 1234-5678</div>
+                        <a href="#" class="add-contact-link">Agregar a mis contactos</a>
+                    </div>
+                </div>
+                <div class="final-actions">
+                    <button class="cta-button">Agregar Medio de Pago</button>
+                    <button class="cta-button secondary nav-button" data-target="pantalla-home">Finalizar</button>
+                </div>
+            </main>
+        </div>
+
+
+    </div>
+
+    <script>
+        // =================================================================
+        // --- BLOQUE DE CONFIGURACIÓN VISUAL ---
+        // Aquí puedes cambiar todas las URLs y ajustar cómo se ven las imágenes.
+        // =================================================================
+        const configuracionVisual = {
+            // --- Imágenes de Fondo ---
+            mapaHome: {
+                url: 'Mapa.png',
+                size: '100%',
+                position: 'top',
+                repeat: 'no-repeat' // Opciones: 'no-repeat', 'repeat', 'repeat-x', 'repeat-y'
+            },
+            mapaConfig: {
+                url: 'Mapa.png',
+                size: 'cover',
+                position: 'center',
+                repeat: 'no-repeat'
+            },
+
+            // --- Logo del Banner ---
+            logoBanner: {
+                url: 'logo.png',
+                objectFit: 'cover' // Opciones: 'cover', 'contain'
+            },
+
+            // --- Imágenes de Onboarding ---
+            onboarding1: {
+                url: 'onboarding1.png',
+                objectFit: 'contain'
+            },
+            onboarding2: {
+                url: 'onboarding2.png',
+                objectFit: 'contain'
+            },
+            onboarding3: {
+                url: 'onboarding3.png',
+                objectFit: 'contain'
+            },
+            onboarding4: {
+                url: 'onboarding4.png',
+                objectFit: 'contain'
+            },
+            onboarding5: {
+                url: 'onboarding5.png',
+                objectFit: 'contain'
+            },
+            
+            // --- Fotos de Conductores ---
+            conductorAna: {
+                url: 'chofer1.png',
+                objectFit: 'cover'
+            },
+            conductorLuis: {
+                url: 'chofer2.png',
+                objectFit: 'cover'
+            },
+            conductorMarta: {
+                url: 'chofer3.png',
+                objectFit: 'cover'
+            },
+            conductorCarlos: {
+                url: 'chofer4.png',
+                objectFit: 'cover'
+            },
+            conductorSofia: {
+                url: 'chofer5.png',
+                objectFit: 'cover'
+            }
+        };
+        // =================================================================
+
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // --- Función para aplicar las imágenes y sus estilos ---
+            function aplicarImagenesYEstilos() {
+                // Fondos
+                const mapaHome = document.getElementById('pantalla-home');
+                mapaHome.style.backgroundImage = `url('${configuracionVisual.mapaHome.url}')`;
+                mapaHome.style.backgroundSize = configuracionVisual.mapaHome.size || 'cover';
+                mapaHome.style.backgroundPosition = configuracionVisual.mapaHome.position || 'center';
+                mapaHome.style.backgroundRepeat = configuracionVisual.mapaHome.repeat || 'no-repeat';
+
+                document.querySelectorAll('.map-container').forEach(el => {
+                    el.style.backgroundImage = `url('${configuracionVisual.mapaConfig.url}')`;
+                    el.style.backgroundSize = configuracionVisual.mapaConfig.size || 'cover';
+                    el.style.backgroundPosition = configuracionVisual.mapaConfig.position || 'center';
+                    el.style.backgroundRepeat = configuracionVisual.mapaConfig.repeat || 'no-repeat';
+                });
+
+                // Imágenes con etiqueta <img>
+                document.querySelectorAll('img[data-img-key]').forEach(img => {
+                    const key = img.dataset.imgKey;
+                    if (configuracionVisual[key]) {
+                        img.src = configuracionVisual[key].url;
+                        img.style.objectFit = configuracionVisual[key].objectFit || 'cover';
+                    }
+                });
+            }
+
+
+            // --- Lógica de Navegación General ---
+            const botonesNavegacion = document.querySelectorAll('.nav-button');
+
+            function mostrarPantalla(idDePantalla) {
+                const pantallas = document.querySelectorAll('.pantalla');
+                pantallas.forEach(pantalla => {
+                    pantalla.classList.remove('active');
+                });
+
+                const pantallaActiva = document.getElementById(idDePantalla);
+                if (pantallaActiva) {
+                    pantallaActiva.classList.add('active');
+                    if (pantallaActiva.classList.contains('config-screen-layout')) {
+                        updateStepper(parseInt(pantallaActiva.dataset.step, 10));
+                    }
+                }
+            }
+
+            botonesNavegacion.forEach(boton => {
+                boton.addEventListener('click', function(e) {
+                    e.preventDefault(); 
+                    const targetPantalla = this.dataset.target;
+                    if (targetPantalla) {
+                        mostrarPantalla(targetPantalla);
+                    }
+                });
+            });
+
+            // --- Lógica del Stepper ---
+            const stepperScreens = document.querySelectorAll('.config-screen-layout');
+            const stepperSteps = [
+                { name: 'Tu casa', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' }, 
+                { name: 'El colegio', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>' }, 
+                { name: 'Horario', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' }, 
+                { name: 'Conductor', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-2.2-1.8-4-4-4H6c-2.2 0-4 1.8-4 4v3c0 .6.4 1 1 1h2"/><circle cx="12" cy="7" r="4"/><path d="M12 11c-2.2 0-4 1.8-4 4v3h8v-3c0-2.2-1.8-4-4-4z"/></svg>' }, 
+                { name: 'Confirmar', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' }
+            ];
+            
+            function createStepperHTML() {
+                let stepsHTML = '<div class="stepper-line"></div><div class="stepper-progress"></div>';
+                stepperSteps.forEach((step, index) => {
+                    stepsHTML += `<div class="step" data-step-index="${index + 1}"><div class="step-icon">${step.icon}</div><span>${step.name}</span></div>`;
+                });
+                return stepsHTML;
+            }
+            
+            stepperScreens.forEach(screen => {
+                const stepperContainer = screen.querySelector('.stepper');
+                if (stepperContainer) {
+                    stepperContainer.innerHTML = createStepperHTML();
+                }
+            });
+
+            function updateStepper(currentStepIndex) {
+                stepperScreens.forEach(screen => {
+                    const steps = screen.querySelectorAll('.step');
+                    const progressLine = screen.querySelector('.stepper-progress');
+                    
+                    steps.forEach((step, index) => {
+                        const stepIndex = index + 1;
+                        step.classList.remove('active', 'completed');
+                        if (stepIndex < currentStepIndex) {
+                            step.classList.add('completed');
+                        } else if (stepIndex === currentStepIndex) {
+                            step.classList.add('active');
+                        }
+                    });
+
+                    const progressWidth = ((currentStepIndex - 1) / (stepperSteps.length - 1)) * 100;
+                    if (progressLine) {
+                        progressLine.style.width = `${progressWidth}%`;
+                    }
+                });
+            }
+
+
+            // --- Lógica del Onboarding Interactivo ---
+            const onboardingScreen = document.getElementById('pantalla-onboarding');
+            const sliderWrapper = onboardingScreen.querySelector('.onboarding-slider-wrapper');
+            const slides = onboardingScreen.querySelectorAll('.onboarding-slide');
+            const ctaButtonOnboarding = document.getElementById('onboarding-cta-btn');
+            const dotsContainer = onboardingScreen.querySelector('.pagination-dots');
+            const skipLink = onboardingScreen.querySelector('.skip-link');
+            
+            let currentOnboardingStep = 0;
+            const totalOnboardingSteps = slides.length;
+
+            if(dotsContainer.children.length === 0) {
+                for (let i = 0; i < totalOnboardingSteps; i++) {
+                    const dot = document.createElement('div');
+                    dot.classList.add('dot');
+                    dotsContainer.appendChild(dot);
+                }
+            }
+            const dots = dotsContainer.querySelectorAll('.dot');
+
+            function updateOnboardingUI() {
+                sliderWrapper.style.transform = `translateX(-${currentOnboardingStep * 100}%)`;
+                dots.forEach((dot, index) => {
+                    dot.classList.toggle('active', index === currentOnboardingStep);
+                });
+
+                if (currentOnboardingStep === totalOnboardingSteps - 1) {
+                    ctaButtonOnboarding.textContent = 'Programar mi primer viaje';
+                } else {
+                    ctaButtonOnboarding.textContent = 'Siguiente';
+                }
+            }
+            
+            ctaButtonOnboarding.addEventListener('click', () => {
+                if (currentOnboardingStep < totalOnboardingSteps - 1) {
+                    currentOnboardingStep++;
+                    updateOnboardingUI();
+                } else {
+                    mostrarPantalla('pantalla-casa');
+                }
+            });
+
+            skipLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                currentOnboardingStep = totalOnboardingSteps - 1;
+                updateOnboardingUI();
+            });
+
+            let touchStartX = 0;
+            let touchEndX = 0;
+            sliderWrapper.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX);
+            sliderWrapper.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                const swipeThreshold = 50;
+                if (touchStartX - touchEndX > swipeThreshold) {
+                    if (currentOnboardingStep < totalOnboardingSteps - 1) {
+                        currentOnboardingStep++;
+                        updateOnboardingUI();
+                    }
+                } else if (touchEndX - touchStartX > swipeThreshold) {
+                    if (currentOnboardingStep > 0) {
+                        currentOnboardingStep--;
+                        updateOnboardingUI();
+                    }
+                }
+            });
+            
+            // --- Lógica de Dirección de Casa ---
+            const direccionInput = document.getElementById('direccion-casa-input');
+            const summaryCasa = document.getElementById('summary-casa');
+            direccionInput.addEventListener('focus', () => {
+                const direccionEjemplo = 'Av. Ricardo Balbín 3015';
+                if(direccionInput.value === '') {
+                    direccionInput.value = direccionEjemplo;
+                    summaryCasa.textContent = direccionEjemplo;
+                }
+            });
+
+            // --- Lógica de Pasajeros ---
+            const cantidadNenesSelect = document.getElementById('cantidad-nenes');
+            const acompToggle = document.getElementById('acomp-toggle');
+            
+            function updatePasajerosSummary() {
+                const nenes = cantidadNenesSelect.value;
+                const acompanante = acompToggle.checked ? ' + 1 adulto' : '';
+                const nenesTexto = `${nenes} ${nenes > 1 ? 'niños' : 'niño'}`;
+                document.getElementById('summary-pasajeros').textContent = nenesTexto + acompanante;
+            }
+            cantidadNenesSelect.addEventListener('change', updatePasajerosSummary);
+            acompToggle.addEventListener('change', updatePasajerosSummary);
+
+
+            // --- Lógica de Precio Dinámico ---
+            const dayButtons = document.querySelectorAll('#pantalla-horario .day-btn');
+            const priceDisplay = document.querySelector('#pantalla-horario .footer-price-summary .price');
+            const summaryPriceDisplay = document.getElementById('summary-total-price');
+            const pricePerDay = 2500;
+
+            function updatePrice() {
+                const selectedDays = document.querySelectorAll('#pantalla-horario .day-btn.active').length;
+                const totalPrice = selectedDays * pricePerDay;
+                const formatter = new Intl.NumberFormat('es-AR', {
+                    style: 'currency',
+                    currency: 'ARS',
+                    minimumFractionDigits: 0,
+                });
+                const formattedPrice = formatter.format(totalPrice);
+                priceDisplay.textContent = `Precio por semana: ${formattedPrice}`;
+                if (summaryPriceDisplay) {
+                    summaryPriceDisplay.textContent = formattedPrice;
+                }
+            }
+
+            dayButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    button.classList.toggle('active');
+                    updatePrice();
+                });
+            });
+            
+            // --- Lógica de Horario ---
+            const timeInput = document.getElementById('school-time');
+            const pickupInfo = document.getElementById('pickup-time-info');
+            const finalPickupTime = document.getElementById('final-pickup-time');
+            const summaryHorario = document.getElementById('summary-horario');
+
+            timeInput.addEventListener('click', () => {
+                if (!timeInput.value) {
+                    timeInput.value = '08:00';
+                    timeInput.dispatchEvent(new Event('change'));
+                }
+            });
+
+            timeInput.addEventListener('change', () => {
+                const selectedTime = timeInput.value;
+                if (selectedTime) {
+                    const [hours, minutes] = selectedTime.split(':').map(Number);
+                    const date = new Date();
+                    date.setHours(hours, minutes, 0, 0);
+                    date.setMinutes(date.getMinutes() - 30);
+                    const pickupHours = String(date.getHours()).padStart(2, '0');
+                    const pickupMinutes = String(date.getMinutes()).padStart(2, '0');
+                    const pickupTime = `${pickupHours}:${pickupMinutes}`;
+
+                    pickupInfo.textContent = `Perfecto, ¡a las ${pickupTime} te pasamos a buscar!`;
+                    pickupInfo.style.display = 'block';
+                    finalPickupTime.textContent = `${pickupTime} AM`;
+                    summaryHorario.textContent = selectedTime;
+                } else {
+                    pickupInfo.style.display = 'none';
+                }
+            });
+
+            // --- Lógica de Selección de Colegio ---
+            const schoolItems = document.querySelectorAll('.school-list li');
+            schoolItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    schoolItems.forEach(i => i.classList.remove('selected'));
+                    item.classList.add('selected');
+                    document.getElementById('summary-colegio').textContent = item.dataset.schoolName;
+                });
+            });
+            
+            // --- Lógica Selección de Conductor ---
+            const driverSlider = document.querySelector('.driver-slider-container');
+            const prevDriverBtn = document.getElementById('prev-driver');
+            const nextDriverBtn = document.getElementById('next-driver');
+            const drivers = [
+                { name: 'Ana Rodríguez', rating: '4.9', trips: '1500+', car: 'Toyota Corolla', imgKey: 'conductorAna', quote: '"Me encanta llevar a los chicos, ¡siempre con una sonrisa!"' },
+                { name: 'Luis Gonzalez', rating: '4.8', trips: '2000+', car: 'Volkswagen Virtus', imgKey: 'conductorLuis', quote: '"La seguridad y la puntualidad son mi compromiso diario."' },
+                { name: 'Marta Sánchez', rating: '5.0', trips: '1200+', car: 'Chevrolet Onix', imgKey: 'conductorMarta', quote: '"Conmigo, los viajes son tranquilos y siempre a tiempo."' },
+                { name: 'Carlos Pérez', rating: '4.9', trips: '1800+', car: 'Renault Sandero', imgKey: 'conductorCarlos', quote: '"Disfruto de cada viaje, asegurando que sea una buena experiencia."' },
+                { name: 'Sofía López', rating: '4.9', trips: '2200+', car: 'Ford Ka', imgKey: 'conductorSofia', quote: '"Llevo a cada niño como si fuera de mi familia."' }
+            ];
+            let currentDriverIndex = 0;
+
+            driverSlider.innerHTML = drivers.map(driver => `
+                <div class="driver-card">
+                    <div class="driver-card-inner">
+                        <img data-img-key="${driver.imgKey}" src="" alt="Foto de ${driver.name}" onerror="this.onerror=null;this.src='https://placehold.co/300x300/CCCCCC/FFFFFF?text=Imagen no disponible';">
+                        <div class="driver-info">
+                            <h3>${driver.name}</h3>
+                            <p class="driver-rating">⭐ ${driver.rating} (${driver.trips} viajes)</p>
+                            <p>${driver.car}</p>
+                            <p class="driver-checks">✅ Antecedentes Verificados</p>
+                            <p class="driver-quote">${driver.quote}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            function updateDriverSlider() {
+                driverSlider.style.transform = `translateX(-${currentDriverIndex * 100}%)`;
+                const selectedDriver = drivers[currentDriverIndex];
+                document.getElementById('summary-conductor-nombre').textContent = selectedDriver.name;
+                document.getElementById('summary-conductor-vehiculo').textContent = selectedDriver.car;
+            }
+
+            nextDriverBtn.addEventListener('click', () => {
+                if (currentDriverIndex < drivers.length - 1) {
+                    currentDriverIndex++;
+                    updateDriverSlider();
+                }
+            });
+            prevDriverBtn.addEventListener('click', () => {
+                if (currentDriverIndex > 0) {
+                    currentDriverIndex--;
+                    updateDriverSlider();
+                }
+            });
+
+
+            // --- Inicialización ---
+            aplicarImagenesYEstilos();
+            updatePrice();
+            updateOnboardingUI();
+            updateDriverSlider();
+            updatePasajerosSummary();
+            mostrarPantalla('pantalla-home');
+        });
+    </script>
+
+</body>
+</html>
