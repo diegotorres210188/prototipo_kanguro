@@ -20,17 +20,22 @@
         }
 
         /* --- Estructura General --- */
-        body {
-            background-color: var(--background-grey);
-            margin: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            max-width: 430px;
-            margin: 0 auto;
-            height: 100vh;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-        }
+html {
+    height: 100%;
+}
+body {
+    background-color: var(--background-grey);
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh; /* <-- CAMBIO CLAVE 1 */
+    position: relative;
+    /* overflow: hidden; */ /* <-- CAMBIO CLAVE 2 (eliminado) */
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    display: flex; /* <-- AÑADIDO */
+    flex-direction: column; /* <-- AÑADIDO */
+}
 
         .screen {
             background-color: var(--background-grey);
