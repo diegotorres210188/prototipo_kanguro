@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -19,7 +20,7 @@
             --border-color: #EAEAEA;
         }
 
-        /* --- Estructura General (CORREGIDA) --- */
+        /* --- Estructura General --- */
         html {
             height: 100%;
         }
@@ -43,7 +44,7 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Evita que el body tenga doble scroll */
+            overflow: hidden;
         }
 
         /* --- Manejo de Pantallas y Transiciones --- */
@@ -69,18 +70,18 @@
             z-index: 10;
         }
         
+        /* --- CORRECCIÓN DE HEADER SUPERPUESTO --- */
         .pantalla header {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            z-index: 20;
+            /* z-index: 20; */ /* <-- SE ELIMINA ESTA LÍNEA PARA EVITAR LA SUPERPOSICIÓN */
             padding: 15px 20px;
             background: rgba(248, 248, 248, 0.8);
             backdrop-filter: blur(10px);
         }
         
-        /* --- (NUEVO) OCULTA EL BOTÓN DE VOLVER --- */
         .pantalla .back-button {
             display: none !important;
         }
@@ -88,7 +89,7 @@
         /* --- Pantalla Principal (Home) --- */
         #pantalla-home header { background: none; backdrop-filter: none; }
         #pantalla-home {
-            overflow: hidden; /* Para que el mapa no se corte */
+            overflow: hidden;
         }
 
         .map-overlay-icons {
@@ -171,8 +172,8 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
-            max-height: 90vh; /* Para que no ocupe toda la pantalla */
-            overflow-y: auto; /* Permite scroll dentro del panel */
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .sheet-header h2 {
@@ -223,7 +224,7 @@
             transition: transform 0.2s ease;
             width: 100%;
             box-sizing: border-box;
-            flex-shrink: 0; /* Evita que se encoja */
+            flex-shrink: 0;
         }
         .promo-banner:hover {
             transform: scale(1.03);
@@ -292,7 +293,7 @@
             gap: 15px;
             border-top: 1px solid var(--border-color);
             padding-top: 20px;
-            flex-shrink: 0; /* Evita que se encoja */
+            flex-shrink: 0;
         }
         .tab-item {
             flex: 1;
@@ -349,7 +350,7 @@
             align-items: center;
             text-align: center;
             padding: 20px;
-            padding-bottom: 220px; /* Espacio para el footer */
+            padding-bottom: 220px;
             box-sizing: border-box;
             overflow-y: auto;
         }
@@ -358,7 +359,7 @@
             width: 100%;
             max-width: 550px;
             height: auto;
-            max-height: 40vh; /* Ajuste para que no sea tan grande */
+            max-height: 40vh;
             margin-bottom: 40px;
             object-fit: contain;
         }
@@ -445,12 +446,15 @@
             height: 100%;
         }
         .config-screen-layout header {
+            position: relative; /* Cambiado de absolute */
             height: 160px; 
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
             padding-bottom: 0;
             flex-shrink: 0;
+            background: rgba(248, 248, 248, 0.8);
+            backdrop-filter: blur(10px);
         }
         
         .stepper {
@@ -521,7 +525,6 @@
             transition: width 0.4s ease;
         }
 
-        /* (CORREGIDO) Permite scroll en el contenido principal */
         .config-screen-layout main {
             flex-grow: 1;
             display: flex;
@@ -796,7 +799,7 @@
         
         /* --- PANTALLA CONFIRMACIÓN FINAL --- */
         #pantalla-confirmacion { background-color: var(--panel-background); }
-        #pantalla-confirmacion header { background: none; backdrop-filter: none; }
+        #pantalla-confirmacion header { display: none }
         #pantalla-confirmacion main {
             padding: 20px;
             justify-content: center;
@@ -833,7 +836,7 @@
             box-sizing: border-box;
             background-color: var(--panel-background);
             border-top: 1px solid var(--border-color);
-            flex-shrink: 0; /* Para que el footer no se encoja */
+            flex-shrink: 0;
         }
         .info-box {
             background-color: var(--background-grey);
@@ -967,7 +970,6 @@
         
         <div id="pantalla-casa" class="pantalla config-screen-layout" data-step="1">
             <header>
-                <button class="nav-button back-button" data-target="pantalla-onboarding">&lt; Volver</button>
                 <div class="stepper"></div>
             </header>
             <main>
@@ -1009,7 +1011,6 @@
         
         <div id="pantalla-colegio" class="pantalla config-screen-layout" data-step="2">
             <header>
-                <button class="nav-button back-button" data-target="pantalla-casa">&lt; Volver</button>
                 <div class="stepper"></div>
             </header>
             <main>
@@ -1037,7 +1038,6 @@
         
         <div id="pantalla-horario" class="pantalla config-screen-layout" data-step="3">
              <header>
-                <button class="nav-button back-button" data-target="pantalla-colegio">&lt; Volver</button>
                 <div class="stepper"></div>
             </header>
             <main>
@@ -1070,7 +1070,6 @@
         
         <div id="pantalla-conductor" class="pantalla config-screen-layout" data-step="4">
             <header>
-                <button class="nav-button back-button" data-target="pantalla-horario">&lt; Volver</button>
                 <div class="stepper"></div>
             </header>
             <main>
@@ -1086,7 +1085,6 @@
 
         <div id="pantalla-resumen" class="pantalla config-screen-layout" data-step="5">
             <header>
-                <button class="nav-button back-button" data-target="pantalla-conductor">&lt; Volver</button>
                 <div class="stepper"></div>
             </header>
             <main>
